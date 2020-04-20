@@ -1,73 +1,87 @@
 import math
 import numpy as np
 
-class Persona:
-    def __init__(self,i, posx, posy, objx, objy, v, t_contagiado, fijo):
+class Person:
+    def __init__(self,i, posx, posy, objx, objy, v, t_recovery, t_incubation, quarantined):
         # movement speed
-        self.v=v
+        self.v = v
         # target position
-        self.objx=objx
-        self.objy=objy
+        self.objx = objx
+        self.objy = objy
         #ID and name
-        self.indice=i
-        self.nombre="Persona "+str(i)
+        self.indice = i
+        self.name   = "Person "+str(i)
         #State: Susceptible, Infected or Retired
-        self.infectado = False
+        self.infectious = False
+        self.exposed    = False
         self.suceptible = True
-        self.retirado = False
+        self.removed    = False
         #Current position
         self.posx = posx
-        self.posy=posy
+        self.posy = posy
         #is it fixed (in quarantine)?
-        self.fijo = fijo
+        self.quaritined = quarantined
 
         # displacement per iteration
-        if self.fijo:
-
+        if self.quaritined:
             self.deltax = 0
             self.deltay = 0
         else:
             self.deltax = (self.objx - self.posx) / self.v
             self.deltay = (self.objy - self.posy) / self.v
         #time in which the person was infected
-        self.i_contagio=-1
+        self.t_contaminated = -1
         #time that the infection lasts, recover time
-        self.t_contagiado = t_contagiado
+        self.t_recovery = t_recovery
+        #time before the person becomes infection, incubation period
+        self.t_incubation = t_incubation
 
 
     def __str__(self):
-        return self.nombre+" en posicin "+str(self.posx)+", "+str(self.posy)
+        return self.name+" en posicin "+str(self.posx)+", "+str(self.posy)
 
-    def infectar(self,i):
-        #infect
-        self.infectado=True
-        self.suceptible=False
-        self.retirado = False
-        self.i_contagio=i
+    # The person becomes infected but is not yet infectious
+    def incubate(self,i):
+        self.infectious = False
+        self.exposed    = True
+        self.suceptible = False
+        self.removed    = False
+        self.t_contaminated = i
 
-    def retirar(self):
+    # The person becomes infectious after the incubation period has passed
+    def infect(self):
+        self.infectious = True
+        self.exposed    = False
+        self.suceptible = False
+        self.removed    = False
+
+    def remove(self):
         #heal
-        self.retirado=True
+        self.removed=True
         self.suceptible=False
-        self.infectado=False
+        self.infectious=False
 
-    def set_objetivo(self,objx,objy):
+    def set_objective(self,objx,objy):
         #this function is used to create a new target position
         self.objx=objx
         self.objy=objy
-        if self.fijo:
+        if self.quaritined:
             self.deltax = 0
             self.deltay=0
         else:
             self.deltax = (self.objx - self.posx) / self.v
             self.deltay = (self.objy - self.posy) / self.v
-        print("Nuevo OBJ   ", self.objx,self.objy,"  ",self.indice)
+        print("New objective  ", self.objx,self.objy,"  ",self.indice)
 
-    def check_contagio(self,i):
+    def check_contamination(self,i):
         #this function is used to heal the person if the established infection time has passed
-        if self.i_contagio>-1:
-            if i-self.i_contagio>self.t_contagiado:
-                self.retirar()
+        if self.t_contaminated>-1:
+
+            if i-self.t_contaminated-self.t_incubation >self.t_recovery:
+                self.remove()
+
+            elif i-self.t_contaminated > self.t_incubation:
+                self.infect()
 
 
     def update_pos(self, n_posx, n_posy):
@@ -80,7 +94,7 @@ class Persona:
             self.posy=n_posy
 
         if abs(self.posx-self.objx)<3 and abs(self.posy-self.objy)<3:
-            self.set_objetivo(np.random.random()*100, np.random.random()*100)
+            self.set_objective(np.random.random()*100, np.random.random()*100)
         if self.posx>100:
             self.posx=100
         if self.posy>100:
@@ -91,11 +105,13 @@ class Persona:
             self.posy=0
 
     def get_color(self):
-        if self.infectado:
+        if self.infectious:
             return 'red'
+        if self.exposed:
+            return 'orange'
         if self.suceptible:
             return 'blue'
-        if self.retirado:
+        if self.removed:
             return 'gray'
 
     def get_pos(self):

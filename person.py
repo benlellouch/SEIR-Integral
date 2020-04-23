@@ -35,6 +35,8 @@ class Person:
         self.t_recovery = t_recovery
         #time before the person becomes infection, incubation period
         self.t_incubation = t_incubation
+        #numbre of people this person has infected during his infectious period
+        self.p_infected = 0
 
 
     def __str__(self):

@@ -75,7 +75,7 @@ def update(frame,rt,ct,t,r0):
             #check for people around the sick individual and infect the ones within the
             # transmission radius given the probability
             for per in personas:
-                if per.indice==p.indice or per.infectious or per.removed or per.exposed:
+                if per.index==p.index or per.infectious or per.removed or per.exposed:
                     pass
                 else:
                     d=p.get_dist(per.posx,per.posy)
@@ -83,7 +83,7 @@ def update(frame,rt,ct,t,r0):
                         if np.random.random() < p_contagion / 100:
                             per.incubate(frame)
                             p.p_infected += 1
-                            sizes[per.indice]=80
+                            sizes[per.index]=80
 
 
         colores.append(p.get_color()) #change dot color according to the person's status

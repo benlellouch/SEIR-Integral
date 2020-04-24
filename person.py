@@ -9,7 +9,7 @@ class Person:
         self.objx = objx
         self.objy = objy
         #ID and name
-        self.indice = i
+        self.index = i
         self.name   = "Person "+str(i)
         #State: Susceptible, Infected or Retired
         self.infectious = False
@@ -73,7 +73,7 @@ class Person:
         else:
             self.deltax = (self.objx - self.posx) / self.v
             self.deltay = (self.objy - self.posy) / self.v
-        print("New objective  ", self.objx,self.objy,"  ",self.indice)
+        print("New objective  ", self.objx,self.objy,"  ",self.index)
 
     def check_contamination(self,i):
         #this function is used to heal the person if the established infection time has passed

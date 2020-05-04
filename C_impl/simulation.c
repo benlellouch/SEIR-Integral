@@ -1,15 +1,16 @@
 #include<time.h>
 #include<stdio.h>
+#include<omp.h>
 
 #include "person.h"
 
-#define SIZE 10000
+#define SIZE 5000
 #define P_INFECTED 3
-#define R_CONTAGION 3
+#define R_CONTAGION 5
 #define P_CONTAGION 30
 #define P_QUARANTINE 0 
-#define T_RECOVERY 30
-#define T_INCUBATION 60
+#define T_RECOVERY 60
+#define T_INCUBATION 30
 
 Person population[SIZE];
 int contaminated = 0;
@@ -52,6 +53,7 @@ void update(int frame, int *total_recovered)
 {
     int removed = 0;
     int p_infected = 0;
+    
     for (int i = 0; i < SIZE; i++)
     {
         check_contamination(&population[i],frame);
@@ -66,6 +68,7 @@ void update(int frame, int *total_recovered)
         }
         if(population[i].infectious)
         {
+            #pragma omp parallel for
             for (int j = 0; j < SIZE; j++)
             {
                 if((population[i].index == population[j].index) ||
@@ -112,7 +115,7 @@ int main()
     int i = 0;
     int *total_recovered = malloc(sizeof(int));
     *total_recovered = 0;
-    while(i < 1000)
+    while(i < 10000)
     {
         printf("Time frame: %i completed", i);
         update(i, total_recovered);

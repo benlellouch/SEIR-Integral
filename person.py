@@ -73,7 +73,7 @@ class Person:
         else:
             self.deltax = (self.objx - self.posx) / self.v
             self.deltay = (self.objy - self.posy) / self.v
-        print("New objective  ", self.objx,self.objy,"  ",self.index)
+        # print("New objective  ", self.objx,self.objy,"  ",self.index)
 
     def check_contamination(self,i):
         #this function is used to heal the person if the established infection time has passed

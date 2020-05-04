@@ -4,13 +4,13 @@ import matplotlib.pyplot as plt
 from matplotlib.animation import FuncAnimation
 
 #SIMULATION PARAMETERS
-n=400  #number of individuals
-p_infected   = 1    #percentage of infected people at the beginning of the simulation (0-100%)
+n=1000  #number of individuals
+p_infected   = 0.5    #percentage of infected people at the beginning of the simulation (0-100%)
 r_contagion  = 3    #radius of transmission in pixels (0-100)
-p_contagion  = 20    #probability of transmission in percentage (0-100%)
+p_contagion  = 30    #probability of transmission in percentage (0-100%)
 p_quarantine = 0   #percentage of the people in quarantine (0-100%)
-t_recovery   = 30  #time taken to recover in number of frames (0-infinity)
-t_incubation = 60   #incubation period
+t_recovery   = 40  #time taken to recover in number of frames (0-infinity)
+t_incubation = 40   #incubation period
 
 contaminated=0
 personas=[]
@@ -52,11 +52,11 @@ ct=[contaminated]
 rt=[0]
 t=[0]
 r0=[0]
-
+lockdown = False
 
 
 #function excecuted frame by frame
-def update(frame,rt,ct,t,r0):
+def update(frame,rt,ct,t,r0, lockdown):
     infected = 0
     removed = 0
     colores = []
@@ -91,6 +91,12 @@ def update(frame,rt,ct,t,r0):
         t_r0 = sum(new_removed) / len(new_removed)
     else:
         t_r0 = 0
+
+    if (sum(ct) > (n * 0.3)) and (not lockdown):
+        print("I get here ", lockdown)
+        for p in personas:
+            if np.random.random()<80/100:
+                p.quaritined=True
     
 
     #update the plotting data
@@ -112,5 +118,5 @@ def update(frame,rt,ct,t,r0):
     return scatt,cvst,rvst,r0vst
 
 #run the animation indefinitely
-animation = FuncAnimation(fig, update, interval=25,fargs=(rt,ct,t,r0),blit=True)
+animation = FuncAnimation(fig, update, interval=25,fargs=(rt,ct,t,r0,lockdown),blit=True)
 plt.show()

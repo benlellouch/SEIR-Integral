@@ -115,7 +115,7 @@ int main()
     int i = 0;
     int *total_recovered = malloc(sizeof(int));
     *total_recovered = 0;
-    while(i < 10000)
+    while(*total_recovered < SIZE)
     {
         printf("Time frame: %i completed", i);
         update(i, total_recovered);

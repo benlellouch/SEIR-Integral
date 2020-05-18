@@ -3,44 +3,50 @@
 #include<math.h>
 #include<stdio.h>
 
+//#define CITY_WIDTH_METERS 1000
+#define CITY_WIDTH_METERS 100
+
 typedef struct
 {
-    double speed;
+  double speed;
+  
+  //current position 
+  double pos_x;
+  double pos_y;
 
-    //target position
-    double obj_x;
-    double obj_y;
+  // target position
+  double obj_x;
+  double obj_y;
 
-    int index;
+  //displacement per frame
+  double delta_x;
+  double delta_y;
 
-    bool infectious;
-    bool exposed;
-    bool susceptible;
-    bool removed;
-    bool quarantined;
+  // state
+  bool susceptible;
+  bool exposed;
+  bool infected;
+  bool removed;
+  bool quarantined;
+  
+  // frame number of event
+  int t_exposed;
+  int t_infected;
+  int t_removed;
 
-    //current position 
-    double pos_x;
-    double pos_y;
+  // duration of exposed and infection period
+  int duration_exposure;
+  int duration_infection;
 
-    //displacement per frame
-    double delta_x;
-    double delta_y;
-
-    int t_contaminated;
-    int t_removed;
-    int t_recovery;
-    int t_incubation;
-
-    int p_infected;
+  int people_infected;
 } Person;
 
 
-void incubate(Person* person, int i);
-void infect(Person *person);
-void remove_p(Person *person, int i);
+void expose(Person* person, int iframe);
+void infect(Person *person, int iframe);
+void remove_p(Person *person, int iframe);
+void check_contamination(Person *person, int iframe);
 void set_objective(Person *person, const int obj_x, const int obj_y);
-void check_contamination(Person *person, int i);
 void update_pos(Person *person, double n_pos_x, double n_pos_y);
 double get_distance(Person *p1, Person *p2);
 int random_bounded_num(int lower, int upper);

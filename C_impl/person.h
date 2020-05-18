@@ -6,6 +6,8 @@
 //#define CITY_WIDTH_METERS 1000
 #define CITY_WIDTH_METERS 100
 
+int num_susceptible, num_exposed, num_infected, num_removed;
+
 typedef struct
 {
   double speed;

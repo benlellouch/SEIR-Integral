@@ -10,8 +10,10 @@
 #include<stdio.h>
 #include<curand_kernel.h>
 
+#define CUDA_CORES 384 //number of cuda cores
+
 #define RAND_SEED 1999
-#define POP_SIZE 300
+#define POP_SIZE 10000
 //#define POP_SIZE 2000
 #define INIT_PROB_INFECTED 100// per 10000
 #define INIT_PROB_QUARANTINED 0
@@ -152,11 +154,19 @@ int random_bounded_num(int lower, int upper)
     return (rand() % (upper - lower + 1)) + lower; 
 }
 
-__global__ void setup_kernel(curandState *state)
+__global__ void setup_kernel(curandState *state, int* max_i_per_core)
 {
     int id = threadIdx.x;
     if(id < POP_SIZE)
         curand_init(RAND_SEED, id, 0, &state[id]);
+        if (id == CUDA_CORES - 1)
+        {
+          max_i_per_core[id] = POP_SIZE - 1;
+        }
+        else
+        {
+          max_i_per_core[id] = (id + 1) * (POP_SIZE / CUDA_CORES);
+        }
 }
 
 void generate_population(Person *population, int *num_exposed, int *num_susceptible)
@@ -219,36 +229,52 @@ void update_daily_objectives(Person *population)
 
 }
 
-__global__ void frame_update_helper(Person *person, Person *population, curandState *states, int iframe, int *num_exposed, int *num_susceptible)
+__global__ void frame_update_helper(Person *person, Person *population, curandState *states, int iframe, int *num_exposed, int *num_susceptible, int* max_i_per_core)
 {
+    int i = threadIdx.x;
+    int lower_bound, upper_bound;
+    if(i == 0)
+    {
+      lower_bound = 0;
+      upper_bound = max_i_per_core[i];
+    }
+    else
+    {
+      lower_bound = max_i_per_core[i-1];
+      upper_bound = max_i_per_core[i];
+    }
+
 
     if (i < POP_SIZE)
     {
-
-        curandState localState = states[i];
+      // printf("Id: %i, lower bound: %i, upper bound: %i\n", i, lower_bound, upper_bound);
+      curandState localState = states[i];
+      for (int j = lower_bound; j < upper_bound; j++)
+      {
         float random_num = (curand_uniform(&localState));
         // printf("randnum : %f\n", random_num);
-        if(/*(person != &population[i]) 
-        &&*/  population[i].susceptible 
-        && (get_distance(person, &population[i]) < R_CONTAGION) 
+        if((person != &population[j]) 
+        &&  population[j].susceptible 
+        && (get_distance(person, &population[j]) < R_CONTAGION) 
         && ( random_num < P_CONTAGION))
         {
-            population[i].susceptible = false;
-            population[i].exposed = true;
-            population[i].infected = false;
-            population[i].removed = false;
-            population[i].t_exposed = iframe;
+            population[j].susceptible = false;
+            population[j].exposed = true;
+            population[j].infected = false;
+            population[j].removed = false;
+            population[j].t_exposed = iframe;
             (*num_exposed) ++;
             (*num_susceptible) --;
             person->people_infected ++;
+            // printf("I get here");
         }
-
-        states[i] = localState;
+      }
+      states[i] = localState;
     }
 
 }
 
-void frame_update(int iframe,Person* population, curandState *states, int *removed, int *num_susceptible, int *num_exposed, int *num_infected, int* num_removed)
+void frame_update(int iframe,Person* population, curandState *states, int *removed, int *num_susceptible, int *num_exposed, int *num_infected, int* num_removed, int* max_i_per_core)
 {
     for (int ipop = 0; ipop < POP_SIZE; ipop++) {
       if (!(population[ipop].removed)) {
@@ -262,7 +288,7 @@ void frame_update(int iframe,Person* population, curandState *states, int *remov
 	  (*removed)++;
 	
 	if(population[ipop].infected) {
-    frame_update_helper<<<1,POP_SIZE>>>(&population[ipop], population, states, iframe, num_exposed, num_susceptible);
+    frame_update_helper<<<1,CUDA_CORES>>>(&population[ipop], population, states, iframe, num_exposed, num_susceptible, max_i_per_core);
     cudaDeviceSynchronize();
 	} // if populuation[ipop]
       } // if populuation[ipop]
@@ -325,10 +351,12 @@ int main()
   cudaMallocManaged(&population, POP_SIZE * sizeof(Person), cudaMemAttachGlobal);
 
   curandState *devStates;
-  cudaMalloc((void **)&devStates, POP_SIZE * sizeof(curandState));
-  setup_kernel<<<1, POP_SIZE>>>(devStates);
+  cudaMalloc((void **)&devStates, CUDA_CORES * sizeof(curandState));
 
+  int *max_i_per_core;
+  cudaMalloc ((void **) &max_i_per_core, CUDA_CORES * sizeof(int));
 
+  setup_kernel<<<1, CUDA_CORES>>>(devStates, max_i_per_core);
   
   generate_population(population, num_exposed, num_susceptible);
   int iframe = 0;
@@ -341,10 +369,10 @@ int main()
     int removed = 0;
     update_daily_objectives(population);
     for (int iframeperday=0; iframeperday < NFRAMES_PER_DAY; iframeperday++) {
-      frame_update(iframe, population, devStates,  &removed, num_susceptible, num_exposed, num_infected, num_removed);
+      frame_update(iframe, population, devStates,  &removed, num_susceptible, num_exposed, num_infected, num_removed, max_i_per_core);
       printf("Time frame %d: susceptible = %d, exposed  = %d, infected = %d, removed = %d, with %d new reported cases\n",
-	     iframe, *num_susceptible,
-	     *num_exposed, *num_infected, *num_removed, removed);
+	          iframe, *num_susceptible,
+	          *num_exposed, *num_infected, *num_removed, removed);
       iframe++;
     } // for iframeperday
     total_removed += removed;

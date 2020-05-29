@@ -56,6 +56,3 @@ __device__ double get_distance(Person *p1, Person *p2);
 int random_bounded_num(int lower, int upper);
 
 
-
-
-

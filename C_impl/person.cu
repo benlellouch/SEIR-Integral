@@ -1,7 +1,7 @@
 #include"person.h"
 
 
-void expose(Person *person, int iframe)
+__device__ void expose(Person *person, int iframe)
 {
     person->susceptible= false;
     person->exposed = true;
@@ -9,8 +9,8 @@ void expose(Person *person, int iframe)
     person->removed = false;
     person->t_exposed = iframe;
     //    printf("expose: New exposed person\n");
-    num_exposed++;
-    num_susceptible--;
+    // (*num_exposed) ++;
+    // (*num_susceptible) --;
 }
 
 void infect(Person *person, int iframe)
@@ -21,8 +21,8 @@ void infect(Person *person, int iframe)
     person->removed = false;
     person->t_infected = iframe;
     //    printf("infect: New infectious person\n");
-    num_infected++;
-    num_exposed--;
+    (*num_infected)++;
+    (*num_exposed)--;
 }
 
 void remove_p(Person *person, int iframe)
@@ -33,8 +33,8 @@ void remove_p(Person *person, int iframe)
     person->removed = true;
     person->t_removed = iframe;
     //    printf("remove_p: New declared case\n");
-    num_removed++;
-    num_infected--;
+    (*num_removed)++;
+    (*num_infected)--;
 }
 
 void check_contamination(Person *person, int iframe)
@@ -78,9 +78,9 @@ void update_pos(Person *person, double n_pos_x, double n_pos_y)
     }
 }
 
-double get_distance(Person *p1, Person *p2)
+__device__ double get_distance(Person *p1, Person *p2)
 {
-  return sqrt(pow(p1->pos_x - p2->pos_x, 2) + pow(p1->pos_y - p2->pos_y, 2));
+  return sqrtf(powf(p1->pos_x - p2->pos_x, 2) + pow(p1->pos_y - p2->pos_y, 2));
 }
 
 int random_bounded_num(int lower, int upper)

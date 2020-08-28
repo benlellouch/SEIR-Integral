@@ -135,14 +135,19 @@ double compute_R(int iday)
 
 int main()
 {
-  clock_t begin = clock();
-  num_susceptible = POP_SIZE;
-  num_exposed = 0;
-  num_infected = 0;
-  num_removed = 0;
-
-  file = fopen("output.dat", "w");
-  if(file == NULL)
+    file = fopen("output.csv", "w");
+    if(file == NULL)
+    {
+        printf("Error with file");
+        exit(1);
+    }
+    fprintf(file, "frame,new reported cases,total recovered,r0\n");
+    srand(time(0));
+    generate_population();
+    int i = 0;
+    int *total_recovered = malloc(sizeof(int));
+    *total_recovered = 0;
+    while(*total_recovered < SIZE)
     {
       printf("Error with file\n");
       exit(1);

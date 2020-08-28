@@ -13,20 +13,20 @@
 #define CUDA_CORES 384 //number of cuda cores
 
 #define RAND_SEED 1999
-#define POP_SIZE 10000
+#define POP_SIZE 100000
 //#define POP_SIZE 2000
-#define INIT_PROB_INFECTED 100// per 10000
+#define INIT_PROB_INFECTED 100 // per 10000
 #define INIT_PROB_QUARANTINED 0
 //#define R_CONTAGION 1.
 #define R_CONTAGION 4.
-#define P_CONTAGION 0.3  // per 10000
-#define NDAYS_MAX 365
+#define P_CONTAGION 0.1  // x100 to get percentage
+#define NDAYS_MAX 30
 //#define NFRAMES_PER_DAY 100
 #define NFRAMES_PER_DAY 100
 #define DURATION_EXPOSURE_DAYS 2.9
 #define DURATION_INFECTION_DAYS 6.4
 
-#define CITY_WIDTH_METERS 100
+#define CITY_WIDTH_METERS 1000
 
 
 FILE *file;
